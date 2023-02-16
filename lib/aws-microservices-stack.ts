@@ -9,11 +9,13 @@ export class AwsMicroservicesStack extends cdk.Stack {
         super(scope, id, props);
 
         const database = new DynamodbConstruct(this, "Database")
-        const microservice = new MicroserviceConstruct(this, "Microservice", {
-            productTable: database.productTable
+        const microservice = new MicroserviceConstruct(this, "Microservices", {
+            productTable: database.productTable,
+            basketTable: database.basketTable
         })
         new ApiGatewayConstruct(this, "ApiGateway", {
-            microservice: microservice.productFunction
+            productMicroservice: microservice.productFunction,
+            basketMicroservice: microservice.basketFunction
         });
     }
 }
