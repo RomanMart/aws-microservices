@@ -8,7 +8,7 @@ export class DynamodbConstruct extends Construct {
     constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        const productTable = new Table(this, "product", {
+        this.productTable = new Table(this, "product", {
             partitionKey: {
                 name: "id",
                 type: AttributeType.STRING,
@@ -17,7 +17,5 @@ export class DynamodbConstruct extends Construct {
             removalPolicy: RemovalPolicy.DESTROY,
             billingMode: BillingMode.PAY_PER_REQUEST
         });
-
-        this.productTable = productTable;
     }
 }

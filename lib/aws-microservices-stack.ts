@@ -12,10 +12,8 @@ export class AwsMicroservicesStack extends cdk.Stack {
         const microservice = new MicroserviceConstruct(this, "Microservice", {
             productTable: database.productTable
         })
-
-        const apiGateway = new ApiGatewayConstruct(this, "ApiGateway", {
-             microservice: microservice.productFunction
-        })
-
+        new ApiGatewayConstruct(this, "ApiGateway", {
+            microservice: microservice.productFunction
+        });
     }
 }
