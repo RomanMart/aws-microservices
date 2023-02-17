@@ -7,18 +7,21 @@ import {ITable} from "aws-cdk-lib/aws-dynamodb";
 interface IMicroserviceProps {
     productTable: ITable;
     basketTable: ITable;
+    orderTable: ITable;
 }
 
 export class MicroserviceConstruct extends Construct {
 
     public readonly productFunction: NodejsFunction;
     public readonly basketFunction: NodejsFunction;
+    public readonly orderFunction: NodejsFunction;
 
     constructor(scope: Construct, id: string, props: IMicroserviceProps) {
         super(scope, id);
 
         this.productFunction = this.createProductFunction(props.productTable);
-        this.basketFunction = this.createBasketFunction(props.basketTable)
+        this.basketFunction = this.createBasketFunction(props.basketTable);
+        this.orderFunction = this.createOrderingFunction(props.orderTable);
     }
 
     private createProductFunction(productTable: ITable): NodejsFunction {
@@ -55,6 +58,9 @@ export class MicroserviceConstruct extends Construct {
             environment: {
                 PRIMARY_KEY: 'userName',
                 DYNAMODB_TABLE_NAME: basketTable.tableName,
+                EVENT_SOURCE: 'com.swn.basket.checkoutbasket',
+                EVENT_DETAILTYPE: 'CheckoutBasket',
+                EVENT_BUSNAME: 'EventBus'
             },
             runtime: Runtime.NODEJS_18_X,
         }
@@ -66,5 +72,29 @@ export class MicroserviceConstruct extends Construct {
 
         basketTable.grantReadWriteData(basketFunction);
         return basketFunction;
+    }
+
+    private createOrderingFunction(orderTable: ITable): NodejsFunction {
+        const nodeJsFunctionProps: NodejsFunctionProps = {
+            bundling: {
+                externalModules: [
+                    'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
+                ],
+            },
+            environment: {
+                PRIMARY_KEY: 'userName',
+                SORT_KEY: 'orderDate',
+                DYNAMODB_TABLE_NAME: orderTable.tableName,
+            },
+            runtime: Runtime.NODEJS_18_X,
+        }
+
+        const orderFunction = new NodejsFunction(this, 'orderingLambdaFunction', {
+            entry: join(__dirname, `/../src/ordering/index.js`),
+            ...nodeJsFunctionProps,
+        });
+
+        orderTable.grantReadWriteData(orderFunction);
+        return orderFunction;
     }
 }

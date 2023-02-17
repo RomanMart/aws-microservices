@@ -5,12 +5,14 @@ import {RemovalPolicy} from "aws-cdk-lib";
 export class DynamodbConstruct extends Construct {
     public readonly productTable: ITable;
     public readonly basketTable: ITable;
+    public readonly orderTable: ITable;
 
     constructor(scope: Construct, id: string) {
         super(scope, id);
 
         this.productTable = this.createProductTable();
         this.basketTable = this.createBasketTable();
+        this.orderTable = this.createOrderTable();
 
     }
 
@@ -37,6 +39,22 @@ export class DynamodbConstruct extends Construct {
                 type: AttributeType.STRING,
             },
             tableName: 'basket',
+            removalPolicy: RemovalPolicy.DESTROY,
+            billingMode: BillingMode.PAY_PER_REQUEST
+        });
+    }
+
+    private createOrderTable(): ITable {
+        return new Table(this, 'order', {
+            partitionKey: {
+                name: 'userName',
+                type: AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'orderDate',
+                type: AttributeType.STRING,
+            },
+            tableName: 'order',
             removalPolicy: RemovalPolicy.DESTROY,
             billingMode: BillingMode.PAY_PER_REQUEST
         });

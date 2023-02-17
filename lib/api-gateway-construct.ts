@@ -4,7 +4,8 @@ import {IFunction} from "aws-cdk-lib/aws-lambda";
 
 interface IApiGatewayProps {
     productMicroservice: IFunction,
-    basketMicroservice: IFunction
+    basketMicroservice: IFunction,
+    orderingMicroservice: IFunction
 }
 
 export class ApiGatewayConstruct extends Construct {
@@ -13,6 +14,7 @@ export class ApiGatewayConstruct extends Construct {
 
         this.createProductApi(props.productMicroservice);
         this.createBasketApi(props.basketMicroservice);
+        this.createOrderingApi(props.orderingMicroservice)
     }
 
     private createProductApi(productMicroservice: IFunction) {
@@ -49,5 +51,31 @@ export class ApiGatewayConstruct extends Construct {
 
         const basketCheckout = basket.addResource('checkout');
         basketCheckout.addMethod('POST'); // POST /basket/checkout
+    }
+
+    private createOrderingApi(orderingMicroservices: IFunction) {
+        // Ordering microservices api gateway
+        // root name = order
+
+        // GET /order
+        // GET /order/{userName}
+        // expected request : xxx/order/RomanM?orderDate=timestamp
+        // ordering ms grap input and query parameters and filter to dynamo db
+
+        const apigw = new LambdaRestApi(this, 'orderApi', {
+            restApiName: 'Order Service',
+            handler: orderingMicroservices,
+            proxy: false
+        });
+
+        const order = apigw.root.addResource('order');
+        order.addMethod('GET');  // GET /order
+
+        const singleOrder = order.addResource('{userName}');
+        singleOrder.addMethod('GET');  // GET /order/{userName}
+        // expected request : xxx/order/swn?orderDate=timestamp
+        // ordering ms grap input and query parameters and filter to dynamo db
+
+        return singleOrder;
     }
 }
